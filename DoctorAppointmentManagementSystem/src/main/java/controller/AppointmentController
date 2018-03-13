@@ -1,0 +1,105 @@
+package com.yash.damsapp.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.SessionAttribute;
+
+import com.yash.damsapp.domain.Appointment;
+import com.yash.damsapp.domain.Availability;
+import com.yash.damsapp.domain.User;
+import com.yash.damsapp.service.AppointmentService;
+
+@Controller
+@RequestMapping("/appointment")
+public class AppointmentController {
+
+	@Autowired
+	private AppointmentService appointmentService;
+
+	@RequestMapping(value = "/createAppointment.htm", method = RequestMethod.POST)
+	public String createAppointment(@RequestParam String date_created, @RequestParam String time,
+			@RequestParam String slot, Model model, @SessionAttribute("user") User user) {
+		boolean check = appointmentService.checkSameDateAppointment(date_created, user.getId());
+		if(!check) {
+			boolean duplicate = appointmentService.addAppointment(date_created, time, slot, user.getId());
+			if(duplicate) {
+				model.addAttribute("msg", "Appointment Created Successfully");
+				List<Appointment> appointmentList = appointmentService.showAllAppointments(user.getId());
+				model.addAttribute("list", appointmentList);
+			}else {
+				model.addAttribute("err", "SomeOne Else Booked the Slot");
+				return "createAppointment";
+			}
+			
+		}else {
+			model.addAttribute("err", "You already have an appointment for the day");
+			List<Appointment> appointmentList = appointmentService.showAllAppointments(user.getId());
+			model.addAttribute("list", appointmentList);
+		}
+		return "listAppointment";
+	}
+
+	@RequestMapping("/createAppointmentForm.htm")
+	public String showCreateAppointmentForm() {
+		appointmentService.clearPreviousAvailabilites();
+		return "createAppointment";
+	}
+	
+	@RequestMapping("/listAppointmentPage.htm")
+	public String showAppointments(Model model, @SessionAttribute("user") User user) {
+		List<Appointment> appointmentList = appointmentService.showAllAppointments(user.getId());
+		if(appointmentList.isEmpty()) {
+			model.addAttribute("err", "You do not have any appointments yet, Please book an appointment.");
+			return "listAppointment";
+		}
+		model.addAttribute("list", appointmentList);
+		return "listAppointment";
+	}
+	
+	@RequestMapping("/showAvailableAppointments.htm")
+	public String showNewAppointmentForm(Model model, @RequestParam String date_created) {
+		List<Availability> testList = appointmentService.showTestList(date_created);
+		if(testList.isEmpty()) {
+			model.addAttribute("err", "Doctor is not available on this Date ! Please select a valid Date");
+			return "createAppointment";
+		}
+		List<Availability> activeSlots = new ArrayList<Availability>();
+		for (Availability test : testList) {
+			if(test.getStatus()==1) {
+				activeSlots.add(test);
+			}
+		}
+		model.addAttribute("date", date_created);
+		model.addAttribute("testList", testList);
+		model.addAttribute("activeSlots", activeSlots);
+		return "createAppointment";
+	}
+	
+	@RequestMapping("/adminAppointments.htm")
+	public String listAppointmentsToAdmin(Model model, @RequestParam String date_created) {
+		List<Appointment> allAppointments = appointmentService.showAllAppointmentsToAdmin(date_created);
+		model.addAttribute("date", date_created);
+		model.addAttribute("list", allAppointments);
+		return "AdminListPage";
+	}
+	
+	@RequestMapping(value="/adminAppointmentsPage.htm", method=RequestMethod.GET)
+	public String listAppointmentsPage() {
+		return "AdminListPage";
+	}
+	
+	@RequestMapping("/cancelAppointment.htm")
+	public String cancelAppointment(Model model, @RequestParam String appId) {
+		appointmentService.cancelAppointment(appId);
+		model.addAttribute("msg", "Appointment Created Successfully");
+		return "redirect:./listAppointmentPage.htm";
+	}
+	
+}
