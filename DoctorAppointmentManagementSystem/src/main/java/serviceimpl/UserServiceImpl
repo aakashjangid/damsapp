@@ -1,0 +1,101 @@
+package com.yash.damsapp.serviceimpl;
+
+import java.util.List;
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import com.yash.damsapp.dao.UserDAO;
+import com.yash.damsapp.domain.User;
+import com.yash.damsapp.rowmapper.UserMapper;
+import com.yash.damsapp.service.UserService;
+
+/**
+ * This is the user Service which will provide Services related to user
+ * @author aakash.jangid
+ *
+ */
+@Service
+public class UserServiceImpl implements UserService {
+
+	/**
+	 * This is the reference of the UserDAO interface.
+	 */
+	@Autowired
+	private UserDAO userDAO;
+
+	/**
+	 * This is the JDBC Template which will perform all the database transactions
+	 * for us. It will also manage all the connection and pooling by itself. We have
+	 * to fire query using jdbc template.
+	 */
+	private JdbcTemplate jdbcTemplate;
+
+	/**
+	 * This method is used to set the data-source object in the JDBC template
+	 * reference, so that it can perform transactions in the database.
+	 * 
+	 * @param dataSource This dataSource we are setting in the xml file.
+	 */
+	@Autowired
+	public void setDataSource(DataSource dataSource) {
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
+	}
+
+	/**
+	 * This method will insert a user into the database. We have received a user
+	 * information with the help of data traveler and we have send this information
+	 * to the database.
+	 * 
+	 * @return boolean This method will return true if the data is inserted into the
+	 *         database successfully. This method will return false if any error
+	 *         occurs while inserting the information in the database.
+	 */
+	public boolean userRegistration(User user) {
+		return userDAO.insert(user);
+	}
+
+	/**
+	 * This method will check for a user with the help of the loginname and the
+	 * password passed in it as parameters. If there will be any user in the
+	 * database with the same loginname and password it will be returned by this
+	 * method. If there is no user found then it will return null.
+	 * 
+	 * @param loginname
+	 *            Loginname of the user.
+	 * @param password
+	 *            Password of the user.
+	 * @return User this will return the user object. It will return null if no user
+	 *         match with the entered loginname and password.
+	 */
+	public User authenticateUser(String loginname, String password) {
+		User user = null;
+		String sql = "SELECT * FROM users WHERE loginname=? AND password=?";
+		try {
+			user = jdbcTemplate.queryForObject(sql, new Object[] { loginname, password }, new UserMapper());
+			return user;
+		} catch (Exception e) {
+			return user;
+		}
+	}
+
+	public List<User> listUsers() {
+		return userDAO.listUser();
+	}
+
+	public void blockUser(String userId) {
+		userDAO.blockUser(userId);
+	}
+
+	public void update(User userUpdated) {
+		userDAO.update(userUpdated);
+	}
+
+	public void updatePassword(Integer id, String oldPassword, String newPassword, String reNewPassword) {
+		userDAO.updatePassword(id, oldPassword, newPassword, reNewPassword);
+	}
+
+}
