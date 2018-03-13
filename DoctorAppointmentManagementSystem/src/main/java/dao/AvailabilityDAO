@@ -1,0 +1,15 @@
+package com.yash.damsapp.dao;
+
+import java.util.Date;
+import java.util.List;
+
+import com.yash.damsapp.domain.Availability;
+
+public interface AvailabilityDAO {
+
+	public List<Availability> showList(Date date);
+
+	public void makeAvailability(String date);
+
+	public void cancelAvailability(String date);
+}
