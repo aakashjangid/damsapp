@@ -1,0 +1,169 @@
+package com.yash.damsapp.controller;
+
+import java.util.List;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.SessionAttribute;
+import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.support.SessionStatus;
+
+import com.yash.damsapp.comand.UserLoginCommand;
+import com.yash.damsapp.comand.UserPasswordCommand;
+import com.yash.damsapp.comand.UserRegistrationCommand;
+import com.yash.damsapp.domain.User;
+import com.yash.damsapp.service.UserService;
+
+/**
+ * This controller will perform user related controlling
+ * 
+ * @author aakash.jangid
+ *
+ */
+@Controller
+@RequestMapping("/user")
+@SessionAttributes("user")
+public class UserController {
+
+	@Autowired
+	private UserService userService;
+
+	@RequestMapping(value = "/home.htm", method = RequestMethod.GET)
+	public String showHomePage() {
+		return "home";
+	}
+
+	@RequestMapping(value = "/userRegistration.htm", method = RequestMethod.GET)
+	public String showUserRegistrationForm(Model model) {
+		model.addAttribute("command", new UserRegistrationCommand());
+		return "userRegistration";
+	}
+
+	@RequestMapping(value = "/userLogin.htm", method = RequestMethod.GET)
+	public String showUserLoginForm(Model model) {
+		model.addAttribute("loginCommand", new UserLoginCommand());
+		return "userLogin";
+	}
+
+	@RequestMapping(value = "/processRegistration.htm", method = RequestMethod.POST)
+	public String processUserRegistration(@ModelAttribute("command") UserRegistrationCommand command, Model model) {
+		User userObtained = command.getUser();
+		boolean check = userService.userRegistration(userObtained);
+		if (check) {
+			model.addAttribute("loginCommand", new UserLoginCommand());
+			model.addAttribute("msg", "Registration Success !");
+			return "userLogin";
+		} else {
+			model.addAttribute("err", "User With this login name already exists !");
+			return "userRegistration";
+		}
+	}
+
+	@RequestMapping(value = "/processLogin.htm", method = RequestMethod.POST)
+	public String processUserLogin(@ModelAttribute("loginCommand") UserLoginCommand loginCommand, Model model) {
+		User user = userService.authenticateUser(loginCommand.getLoginname(), loginCommand.getPassword());
+		if (user != null) {
+			model.addAttribute("msg", "Login Success !");
+			model.addAttribute("user", user);
+			if (user.getRole() == 1) {
+				return "adminDashboard";
+			} else {
+				return "dashboard";
+			}
+
+		} else {
+			model.addAttribute("err", "Wrong Credentials !");
+			return "userLogin";
+		}
+	}
+
+	@RequestMapping(value = "/userLogout.htm", method = RequestMethod.GET)
+	public String userLogout(HttpSession session, Model model, SessionStatus status) {
+		session.invalidate();
+		status.setComplete();
+		model.addAttribute("msg", "Successfully Logged Out !");
+		model.addAttribute("loginCommand", new UserLoginCommand());
+		return "userLogin";
+	}
+
+	@RequestMapping(value = "/showDashboard.htm", method = RequestMethod.GET)
+	public String showDashboard(@SessionAttribute("user") User user) {
+		if (user.getRole() == 1) {
+			return "adminDashboard";
+		} else {
+			return "dashboard";
+		}
+	}
+
+	@RequestMapping(value = "/userList.htm")
+	public String showUserList(Model model) {
+		List<User> allUsers = userService.listUsers();
+		model.addAttribute("list", allUsers);
+		return "listUsers";
+	}
+
+	@RequestMapping(value = "/blockUser.htm")
+	public String blockUser(@RequestParam String userId) {
+		userService.blockUser(userId);
+		return "redirect:./userList.htm";
+	}
+
+	@RequestMapping("/changeInfoPage.htm")
+	public String changeInfoPage(@SessionAttribute("user") User user, Model model) {
+		model.addAttribute("command", new UserRegistrationCommand());
+		model.addAttribute("user", user);
+		return "changeUserInfo";
+	}
+
+	@RequestMapping("/changeInfo.htm")
+	public String changeInfo(@SessionAttribute("user") User user,
+			@ModelAttribute("command") UserRegistrationCommand command, HttpSession session, Model model,
+			SessionStatus status) {
+		User userUpdated = command.getUser();
+		userUpdated.setId(user.getId());
+		userService.update(userUpdated);
+		session.invalidate();
+		status.setComplete();
+		model.addAttribute("msg", "Info Successfully Changed ! Please Login Again");
+		model.addAttribute("loginCommand", new UserLoginCommand());
+		return "userLogin";
+	}
+
+	@RequestMapping("/changePasswordPage.htm")
+	public String changePasswordPage(@SessionAttribute("user") User user, Model model) {
+		model.addAttribute("command", new UserPasswordCommand());
+		return "changePassword";
+	}
+
+	@RequestMapping(value = "/changePassword.htm", method = RequestMethod.POST)
+	public String changePassword(@SessionAttribute("user") User user,
+			@ModelAttribute("command") UserPasswordCommand command, HttpSession session, Model model,
+			SessionStatus status) {
+		if (user.getPassword().equals(command.getOldPassword())) {
+			if (command.getNewPassword().equals(command.getReNewPassword())) {
+				userService.updatePassword(user.getId(), command.getOldPassword(), command.getNewPassword(),
+						command.getReNewPassword());
+				session.invalidate();
+				status.setComplete();
+				model.addAttribute("msg", "Password Changed Successfully! Please Login Again");
+				model.addAttribute("loginCommand", new UserLoginCommand());
+				return "userLogin";
+			} else {
+				model.addAttribute("command", new UserPasswordCommand());
+				model.addAttribute("err", "New Password Didn't matched with Confirm New Password");
+				return "changePassword";
+			}
+		} else {
+			model.addAttribute("command", new UserPasswordCommand());
+			model.addAttribute("err", "Old Password Incorrect");
+			return "changePassword";
+		}
+	}
+}
