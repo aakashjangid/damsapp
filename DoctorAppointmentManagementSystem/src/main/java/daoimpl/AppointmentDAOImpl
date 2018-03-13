@@ -1,0 +1,126 @@
+package com.yash.damsapp.daoimpl;
+
+import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.yash.damsapp.dao.AppointmentDAO;
+import com.yash.damsapp.domain.Appointment;
+import com.yash.damsapp.domain.Availability;
+import com.yash.damsapp.rowmapper.AppointmentMapper;
+import com.yash.damsapp.rowmapper.AvailabilityMapper;
+
+@Repository
+public class AppointmentDAOImpl implements AppointmentDAO {
+
+	/**
+	 * This is the JDBC Template which will perform all the database transactions
+	 * for us. It will also manage all the connection and pooling by itself. We have
+	 * to fire query using jdbc template.
+	 */
+	private JdbcTemplate jdbcTemplate;
+
+	/**
+	 * This method is used to set the data-source object in the JDBC template
+	 * reference, so that it can perform transactions in the database.
+	 * 
+	 * @param dataSource
+	 *            This dataSource we are setting in the xml file.
+	 */
+	@Autowired
+	public void setDataSource(DataSource dataSource) {
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
+	}
+
+	public boolean insert(String date_created, String time, String slot, Integer userid) {
+		boolean check = false;
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			Date date = dateFormat.parse(date_created);
+			java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+			Time endTime = Time.valueOf(time);
+			Time end = Time.valueOf(endTime.toLocalTime().plusMinutes(15));
+			String sql = "INSERT INTO appointments(userid, date_created, start_time, slot, end_time, end_time_expected, fee, discount, final_fee, cancel, status) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+			Object[] params = new Object[] { userid, sqlDate, time, slot, end, end, 0, 0, 0, 1, 1 };
+			jdbcTemplate.update(sql, params);
+
+			String sqlUpdate = "UPDATE availability SET status=2 WHERE time=? AND date=?";
+			jdbcTemplate.update(sqlUpdate, time, sqlDate);
+
+			check = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return check;
+		}
+		return check;
+	}
+
+	public List<Appointment> showAllAppointments(Integer id) {
+		List<Appointment> appointmentList = null;
+		try {
+			String sql = "SELECT * FROM appointments WHERE userid=?";
+			appointmentList = jdbcTemplate.query(sql, new Object[] { id }, new AppointmentMapper());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return appointmentList;
+	}
+
+	public List<Availability> showAvailableList(String date_created) {
+		List<Availability> testList = null;
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			Date date = dateFormat.parse(date_created);
+			java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+			String sql = "SELECT * FROM availability WHERE date=?";
+			testList = jdbcTemplate.query(sql, new Object[] { sqlDate }, new AvailabilityMapper());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return testList;
+	}
+
+	public List<Appointment> showAllAppointmentsToAdmin(String date_created) {
+		List<Appointment> appointmentList = null;
+		try {
+			String sql = "SELECT * FROM appointments WHERE date_created=?";
+			appointmentList = jdbcTemplate.query(sql, new Object[] { date_created }, new AppointmentMapper());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return appointmentList;
+	}
+
+	public void cancelAppointment(String appId) {
+		try {
+			String sqlToGetAppointment = "SELECT * FROM appointments WHERE id = ?";
+			Appointment appointment = jdbcTemplate.queryForObject(sqlToGetAppointment, new Object[] { appId },
+					new AppointmentMapper());
+
+			String sqlToCancel = "UPDATE appointments SET cancel=2 WHERE id=?";
+			jdbcTemplate.update(sqlToCancel, appId);
+
+			String sqlUpdate = "UPDATE availability SET status=1 WHERE time=? AND date=?";
+			jdbcTemplate.update(sqlUpdate, appointment.getStart_time(), appointment.getDate_created());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void clearPreviousAvailabilites() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		Date date = new Date();
+		String date1 = sdf.format(date);
+		String sql = "DELETE FROM availability WHERE date<=?";
+		jdbcTemplate.update(sql, date1);
+	}
+
+}
