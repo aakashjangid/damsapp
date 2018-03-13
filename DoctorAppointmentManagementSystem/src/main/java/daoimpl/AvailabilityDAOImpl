@@ -1,0 +1,106 @@
+package com.yash.damsapp.daoimpl;
+
+import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.yash.damsapp.dao.AvailabilityDAO;
+import com.yash.damsapp.domain.Appointment;
+import com.yash.damsapp.domain.Availability;
+import com.yash.damsapp.rowmapper.AppointmentMapper;
+import com.yash.damsapp.rowmapper.AvailabilityMapper;
+
+@Repository
+public class AvailabilityDAOImpl implements AvailabilityDAO {
+
+	private JdbcTemplate jdbcTemplate;
+
+	@Autowired
+	public void setDataSource(DataSource dataSource) {
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
+	}
+
+	public List<Availability> showList(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		List<Availability> list = new ArrayList<Availability>();
+		String date1 = sdf.format(date);
+		String sql = "SELECT * FROM availability WHERE date>=? GROUP BY date";
+		try {
+			list = jdbcTemplate.query(sql, new Object[] { date1 }, new AvailabilityMapper());
+		} catch (Exception e) {
+			e.getMessage();
+		}
+		clearPreviousAvailabilities();
+		return list;
+	}
+
+	public void makeAvailability(String date) {
+		try {
+			Time time = Time.valueOf("09:00:00");
+			for (int i = 0; i < 8; i++) {
+				String sql = "INSERT INTO availability(date, time, status) VALUES(?,?,?)";
+				jdbcTemplate.update(sql, date, time, 1);
+				time = Time.valueOf(time.toLocalTime().plusMinutes(15));
+			}
+			makePatientAppointment(date);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void clearPreviousAvailabilities() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		Date date = new Date();
+		String date1 = sdf.format(date);
+		String sql = "DELETE FROM availability WHERE date<=?";
+		jdbcTemplate.update(sql, date1);
+	}
+
+	private void makePatientAppointment(String date) {
+		try {
+			String reason = null;
+			String updateSql = "UPDATE appointments SET cancel=1, cancel_reason=? WHERE date_created=?";
+			jdbcTemplate.update(updateSql, reason, date);
+			
+			String sql = "SELECT * FROM appointments WHERE date_created=?";
+			List<Appointment> appointments = jdbcTemplate.query(sql, new Object[] {date}, new AppointmentMapper());
+			
+			for (Appointment appointment : appointments) {
+				String upSql = "UPDATE availability SET status=2 WHERE date=? AND time=?";
+				jdbcTemplate.update(upSql, date, appointment.getStart_time());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void cancelAvailability(String date) {
+		try {
+			String sql = "DELETE FROM availability WHERE date=?";
+			jdbcTemplate.update(sql, date);
+			System.out.println(date);
+			cancelPatientAppointment(date);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void cancelPatientAppointment(String date) {
+		try {
+			String reason = "Doctor Cancelled the Appointment";
+			String sql = "UPDATE appointments SET cancel=2, cancel_reason=? WHERE date_created=?";
+			jdbcTemplate.update(sql, reason, date);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+}
