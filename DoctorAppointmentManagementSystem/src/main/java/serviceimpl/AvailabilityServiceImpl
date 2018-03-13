@@ -1,0 +1,31 @@
+package com.yash.damsapp.serviceimpl;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.yash.damsapp.dao.AvailabilityDAO;
+import com.yash.damsapp.domain.Availability;
+import com.yash.damsapp.service.AvailabilityService;
+
+@Service
+public class AvailabilityServiceImpl implements AvailabilityService {
+
+	@Autowired
+	private AvailabilityDAO availabilityDAO;
+	
+	public List<Availability> showList(Date date) {
+		return availabilityDAO.showList(date);
+	}
+
+	public void makeAvailability(String date) {
+		availabilityDAO.makeAvailability(date);
+	}
+
+	public void cancelAvailability(String date) {
+		availabilityDAO.cancelAvailability(date);
+	}
+
+}
