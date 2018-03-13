@@ -1,0 +1,49 @@
+package com.yash.damsapp.service;
+
+import java.util.List;
+
+import com.yash.damsapp.domain.User;
+
+/**
+ * This is the user Service which will provide Services related to user
+ * 
+ * @author aakash.jangid
+ *
+ */
+public interface UserService {
+
+	/**
+	 * This method will insert a user into the database. We have received a user
+	 * information with the help of data traveler and we have send this information
+	 * to the database.
+	 * 
+	 * @return boolean This method will return true if the data is inserted into the
+	 *         database successfully. This method will return false if any error
+	 *         occurs while inserting the information in the database.
+	 */
+	public boolean userRegistration(User user);
+
+	/**
+	 * This method will check for a user with the help of the loginname and the
+	 * password passed in it as parameters. If there will be any user in the
+	 * database with the same loginname and password it will be returned by this
+	 * method. If there is no user found then it will return null.
+	 * 
+	 * @param loginname
+	 *            Loginname of the user.
+	 * @param password
+	 *            Password of the user.
+	 * @return User this will return the user object. It will return null if no user
+	 *         match with the entered loginname and password.
+	 */
+	public User authenticateUser(String loginname, String password);
+
+	public List<User> listUsers();
+
+	public void blockUser(String userId);
+
+	public void update(User userUpdated);
+
+	public void updatePassword(Integer id, String oldPassword, String newPassword, String reNewPassword);
+
+}
