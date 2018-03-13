@@ -1,0 +1,172 @@
+package com.yash.damsapp.domain;
+
+import java.io.Serializable;
+import java.sql.Time;
+import java.util.Date;
+
+/**
+ * This class will work as a data traveler. This will also work as model object.
+ * 
+ * @author aakash.jangid
+ *
+ */
+public class Appointment implements Serializable {
+
+	private static final long serialVersionUID = 2684348507894861251L;
+	/**
+	 * This is the id of the Appointment.
+	 */
+	private Integer id;
+	/**
+	 * This is the id of the user who booked the Appointment.
+	 */
+	private Integer userid;
+	/**
+	 * This is the date of the Appointment.
+	 */
+	private Date date_created;
+	/**
+	 * This is the start time of the Appointment.
+	 */
+	private Time start_time;
+	/**
+	 * This is the slot of the Appointment. 1 for AM and 2 for PM.
+	 */
+	private int slot;
+	/**
+	 * This is the end time of the Appointment.
+	 */
+	private Time end_time;
+	/**
+	 * This is the expected end time of the Appointment.
+	 */
+	private Time end_time_expected;
+	/**
+	 * This is the fee for the Appointment.
+	 */
+	private double fee;
+	/**
+	 * This is the discount.
+	 */
+	private double discount;
+	/**
+	 * This is the final fee.
+	 */
+	private double final_fee;
+	/**
+	 * This is the cancel status of Appointment. 1 for Active and 2 for Cancelled.
+	 */
+	private int cancel;
+	/**
+	 * This is the reason of the cancellation of the Appointment.
+	 */
+	private String cancel_reason;
+	/**
+	 * This is the status of the Appointment.
+	 */
+	private int status;
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getUserid() {
+		return userid;
+	}
+
+	public void setUserid(Integer userid) {
+		this.userid = userid;
+	}
+
+	public Date getDate_created() {
+		return date_created;
+	}
+
+	public void setDate_created(Date date_created) {
+		this.date_created = date_created;
+	}
+
+	public Time getStart_time() {
+		return start_time;
+	}
+
+	public void setStart_time(Time start_time) {
+		this.start_time = start_time;
+	}
+
+	public int getSlot() {
+		return slot;
+	}
+
+	public void setSlot(int slot) {
+		this.slot = slot;
+	}
+
+	public Time getEnd_time() {
+		return end_time;
+	}
+
+	public void setEnd_time(Time end_time) {
+		this.end_time = end_time;
+	}
+
+	public Time getEnd_time_expected() {
+		return end_time_expected;
+	}
+
+	public void setEnd_time_expected(Time end_time_expected) {
+		this.end_time_expected = end_time_expected;
+	}
+
+	public double getFee() {
+		return fee;
+	}
+
+	public void setFee(double fee) {
+		this.fee = fee;
+	}
+
+	public double getDiscount() {
+		return discount;
+	}
+
+	public void setDiscount(double discount) {
+		this.discount = discount;
+	}
+
+	public double getFinal_fee() {
+		return final_fee;
+	}
+
+	public void setFinal_fee(double final_fee) {
+		this.final_fee = final_fee;
+	}
+
+	public int getCancel() {
+		return cancel;
+	}
+
+	public void setCancel(int cancel) {
+		this.cancel = cancel;
+	}
+
+	public String getCancel_reason() {
+		return cancel_reason;
+	}
+
+	public void setCancel_reason(String cancel_reason) {
+		this.cancel_reason = cancel_reason;
+	}
+
+	public int getStatus() {
+		return status;
+	}
+
+	public void setStatus(int status) {
+		this.status = status;
+	}
+}
