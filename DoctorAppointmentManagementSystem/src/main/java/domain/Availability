@@ -1,0 +1,31 @@
+package com.yash.damsapp.domain;
+
+import java.sql.Time;
+import java.util.Date;
+
+public class Availability {
+	
+	private Date date;
+	private Time time;
+	private int status;
+	
+	public Date getDate() {
+		return date;
+	}
+	public void setDate(Date date) {
+		this.date = date;
+	}
+	public Time getTime() {
+		return time;
+	}
+	public void setTime(Time time) {
+		this.time = time;
+	}
+	public int getStatus() {
+		return status;
+	}
+	public void setStatus(int status) {
+		this.status = status;
+	}
+	
+}
