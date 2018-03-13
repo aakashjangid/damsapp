@@ -1,0 +1,26 @@
+package com.yash.damsapp.rowmapper;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.springframework.jdbc.core.RowMapper;
+
+import com.yash.damsapp.domain.Appointment;
+
+public class AppointmentMapper implements RowMapper<Appointment>{
+
+	public Appointment mapRow(ResultSet rs, int num) throws SQLException {
+		Appointment appointment = new Appointment();
+		appointment.setId(rs.getInt("id"));
+		appointment.setDate_created(rs.getDate("date_created"));
+		appointment.setStart_time(rs.getTime("start_time"));
+		appointment.setEnd_time(rs.getTime("end_time"));
+		appointment.setEnd_time_expected(rs.getTime("end_time_expected"));
+		appointment.setSlot(rs.getInt("slot"));
+		appointment.setStatus(rs.getInt("status"));
+		appointment.setCancel(rs.getInt("cancel"));
+		appointment.setCancel_reason(rs.getString("cancel_reason"));
+		return appointment;
+	}
+
+}
