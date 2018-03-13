@@ -1,0 +1,32 @@
+package com.yash.damsapp.dao;
+
+import java.util.List;
+
+import com.yash.damsapp.domain.User;
+
+/**
+ * This interface will perform operations related to User.
+ * @author aakash.jangid
+ *
+ */
+public interface UserDAO {
+
+	/**
+	 * This method will insert a user into the database. We have received a user
+	 * information with the help of data traveler and we have send this information
+	 * to the database.
+	 * 
+	 * @return boolean This method will return true if the data is inserted into the
+	 *         database successfully. This method will return false if any error
+	 *         occurs while inserting the information in the database.
+	 */
+	public boolean insert(User user);
+
+	public List<User> listUser();
+
+	public void blockUser(String userId);
+
+	public void update(User userUpdated);
+
+	public void updatePassword(Integer id, String oldPassword, String newPassword, String reNewPassword);
+}
