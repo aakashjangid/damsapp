@@ -1,0 +1,22 @@
+package com.yash.damsapp.dao;
+
+import java.util.List;
+
+import com.yash.damsapp.domain.Appointment;
+import com.yash.damsapp.domain.Availability;
+
+public interface AppointmentDAO {
+
+	public boolean insert(String date_created, String time, String slot, Integer userid);
+
+	public List<Appointment> showAllAppointments(Integer id);
+
+	public List<Availability> showAvailableList(String date_created);
+
+	public List<Appointment> showAllAppointmentsToAdmin(String date_created);
+
+	public void cancelAppointment(String appId);
+
+	public void clearPreviousAvailabilites();
+
+}
